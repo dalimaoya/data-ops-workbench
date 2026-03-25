@@ -1,0 +1,71 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+.venv/
+venv/
+env/
+
+# Node
+node_modules/
+frontend/node_modules/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.*
+
+# Data & logs
+data/
+logs/
+backups/
+*.db
+*.sqlite3
+
+# Build artifacts
+release/
+dist/
+*.tar.gz
+
+# Frontend build output
+backend/web/
+
+# 私有插件（不应出现在公开仓库）
+backend/app/plugins/plugin_ai_*/
+backend/app/plugins/plugin_smart_import/
+backend/app/plugins/plugin_data_mask/
+backend/app/plugins/plugin_data_compare/
+backend/app/plugins/plugin_data_trend/
+backend/app/plugins/plugin_template_market/
+backend/app/plugins/plugin_approval/
+backend/app/plugins/plugin_notify_push/
+
+# AI 引擎
+backend/app/ai/
+
+# 安全工具（私有）
+backend/app/utils/crypto.py
+backend/app/utils/security_middleware.py
+backend/app/utils/sql_security.py
+
+# 内部文档
+briefs/
+handoffs/
+status/
+reviews/
+artifacts/

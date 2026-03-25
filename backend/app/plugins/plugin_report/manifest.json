@@ -1,0 +1,14 @@
+{
+  "name": "plugin-report",
+  "version": "3.2.0",
+  "display_name": "数据对比报告",
+  "display_name_en": "Data Comparison Report",
+  "description": "Excel/PDF报告生成、多表变更对比报告",
+  "author": "dalimaoya",
+  "license": "proprietary",
+  "requires_core": ">=3.0.0",
+  "dependencies": [],
+  "frontend": {
+    "menu_items": []
+  }
+}

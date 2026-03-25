@@ -1,0 +1,22 @@
+{
+  "name": "plugin-db-manager",
+  "version": "3.2.0",
+  "display_name": "库表管理",
+  "display_name_en": "DB Table Manager",
+  "description": "查看表结构、可视化建表、编辑表结构、删除表、SQL生成",
+  "author": "dalimaoya",
+  "license": "proprietary",
+  "requires_core": ">=3.2.0",
+  "dependencies": [],
+  "frontend": {
+    "menu_items": [
+      {
+        "key": "/db-manager",
+        "icon": "ConsoleSqlOutlined",
+        "label_key": "menu.dbManager",
+        "roles": ["admin"],
+        "parent": "/data-maintenance-group"
+      }
+    ]
+  }
+}

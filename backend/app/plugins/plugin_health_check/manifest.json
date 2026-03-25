@@ -1,0 +1,21 @@
+{
+  "name": "plugin-health-check",
+  "version": "3.2.0",
+  "display_name": "健康巡检",
+  "display_name_en": "Health Check",
+  "description": "数据源巡检、表存在性检查、结构变化检测",
+  "author": "dalimaoya",
+  "license": "proprietary",
+  "requires_core": ">=3.0.0",
+  "dependencies": [],
+  "frontend": {
+    "menu_items": [
+      {
+        "key": "/health-check",
+        "icon": "MedicineBoxOutlined",
+        "label_key": "menu.healthCheck",
+        "roles": ["admin"]
+      }
+    ]
+  }
+}

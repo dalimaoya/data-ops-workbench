@@ -1,0 +1,20 @@
+{
+  "name": "plugin-batch-ops",
+  "version": "3.2.0",
+  "display_name": "批量操作",
+  "display_name_en": "Batch Operations",
+  "description": "数据库维护(批量纳管/导出)、多表变更对比",
+  "author": "dalimaoya",
+  "license": "proprietary",
+  "requires_core": ">=3.0.0",
+  "dependencies": [],
+  "frontend": {
+    "menu_items": [
+      {
+        "key": "/db-maintenance",
+        "icon": "DatabaseOutlined",
+        "label_key": "menu.dbMaintenance"
+      }
+    ]
+  }
+}

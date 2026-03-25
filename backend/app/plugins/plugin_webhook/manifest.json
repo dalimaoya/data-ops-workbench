@@ -1,0 +1,21 @@
+{
+  "name": "plugin-webhook",
+  "version": "3.3.0",
+  "display_name": "Webhook 集成",
+  "display_name_en": "Webhook Integration",
+  "description": "配置多个 webhook 端点，支持回写/导出/导入/审批/用户变更事件推送",
+  "author": "dalimaoya",
+  "license": "proprietary",
+  "requires_core": ">=3.2.0",
+  "dependencies": ["httpx"],
+  "frontend": {
+    "menu_items": [
+      {
+        "key": "/webhook-config",
+        "icon": "ApiOutlined",
+        "label_key": "menu.webhookConfig",
+        "roles": ["admin"]
+      }
+    ]
+  }
+}

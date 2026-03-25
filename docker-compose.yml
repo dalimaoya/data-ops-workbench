@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  dataops:
+    build: .
+    ports:
+      - "8580:8580"
+    volumes:
+      - ./data:/app/data
+      - ./backups:/app/backups
+    environment:
+      - PORT=8580

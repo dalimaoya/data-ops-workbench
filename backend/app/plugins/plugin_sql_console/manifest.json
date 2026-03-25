@@ -1,0 +1,21 @@
+{
+  "name": "plugin-sql-console",
+  "version": "3.3.0",
+  "display_name": "SQL 控制台",
+  "display_name_en": "SQL Console",
+  "description": "轻量 SQL 控制台，只允许 SELECT 查询，结果可导出 Excel",
+  "author": "dalimaoya",
+  "license": "proprietary",
+  "requires_core": ">=3.2.0",
+  "dependencies": [],
+  "frontend": {
+    "menu_items": [
+      {
+        "key": "/sql-console",
+        "icon": "CodeOutlined",
+        "label_key": "menu.sqlConsole",
+        "roles": ["admin"]
+      }
+    ]
+  }
+}

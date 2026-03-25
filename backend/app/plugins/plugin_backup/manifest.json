@@ -1,0 +1,21 @@
+{
+  "name": "plugin-backup",
+  "version": "3.2.0",
+  "display_name": "备份迁移",
+  "display_name_en": "Backup & Migration",
+  "description": "平台备份/导入/恢复",
+  "author": "dalimaoya",
+  "license": "proprietary",
+  "requires_core": ">=3.0.0",
+  "dependencies": [],
+  "frontend": {
+    "menu_items": [
+      {
+        "key": "/platform-backup",
+        "icon": "CloudServerOutlined",
+        "label_key": "menu.platformBackup",
+        "roles": ["admin"]
+      }
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "plugin-scheduler",
+  "version": "3.2.0",
+  "display_name": "定时任务",
+  "display_name_en": "Scheduler",
+  "description": "APScheduler引擎、定时巡检/备份/导出",
+  "author": "dalimaoya",
+  "license": "proprietary",
+  "requires_core": ">=3.0.0",
+  "dependencies": ["apscheduler"],
+  "frontend": {
+    "menu_items": [
+      {
+        "key": "/scheduler",
+        "icon": "ScheduleOutlined",
+        "label_key": "menu.scheduler",
+        "roles": ["admin"]
+      }
+    ]
+  }
+}
