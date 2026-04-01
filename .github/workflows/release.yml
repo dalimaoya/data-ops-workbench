@@ -1,0 +1,409 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install system deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc g++ ccache patchelf
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          pnpm install --frozen-lockfile || pnpm install
+          pnpm run build
+
+      - name: Install Python deps & Nuitka
+        run: |
+          pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          pip install nuitka ordered-set zstandard
+
+      - name: Nuitka compile (Linux)
+        run: |
+          cd backend
+          python -m nuitka \
+            --standalone \
+            --output-dir=./nuitka-out \
+            --output-filename=dataops-server \
+            --python-flag=no_site \
+            --python-flag=no_warnings \
+            --follow-imports \
+            --include-package=app \
+            --include-package=app.routers \
+            --include-package=app.plugins \
+            --include-package=app.plugins.plugin_notification \
+            --include-package=app.plugins.plugin_approval \
+            --include-package=app.plugins.plugin_backup \
+            --include-package=app.plugins.plugin_report \
+            --include-package=app.plugins.plugin_scheduler \
+            --include-package=app.plugins.plugin_health_check \
+            --include-package=app.plugins.plugin_batch_ops \
+            --include-package=app.plugins.plugin_smart_import \
+            --include-package=app.plugins.plugin_ai_assistant \
+            --include-package=app.plugins.plugin_db_manager \
+            --include-package=app.plugins.plugin_data_mask \
+            --include-package=app.plugins.plugin_notify_push \
+            --include-package=app.plugins.plugin_data_trend \
+            --include-package=app.plugins.plugin_audit_export \
+            --include-package=app.plugins.plugin_data_compare \
+            --include-package=app.plugins.plugin_template_market \
+            --include-package=app.plugins.plugin_ai_predict \
+            --include-package=app.plugins.plugin_webhook \
+            --include-package=app.plugins.plugin_sql_console \
+            --include-package=app.utils \
+            --include-package=app.schemas \
+            --include-package=app.ai \
+            --include-package=app.i18n \
+            --include-package=app.scheduler \
+            --include-package=uvicorn \
+            --include-package=uvicorn.loops \
+            --include-package=uvicorn.protocols \
+            --include-package=uvicorn.lifespan \
+            --include-package=fastapi \
+            --include-package=starlette \
+            --include-package=starlette.middleware \
+            --include-package=sqlalchemy \
+            --include-package=sqlalchemy.dialects.sqlite \
+            --include-package=sqlalchemy.dialects.mysql \
+            --include-package=sqlalchemy.dialects.postgresql \
+            --include-package=pydantic \
+            --include-package=pydantic_core \
+            --include-package=annotated_types \
+            --include-package=anyio \
+            --include-package=anyio._backends \
+            --include-package=sniffio \
+            --include-package=pymysql \
+            --include-package=passlib \
+            --include-package=passlib.handlers \
+            --include-package=jose \
+            --include-package=bcrypt \
+            --include-package=cryptography \
+            --include-package=httpx \
+            --include-package=openpyxl \
+            --include-package=PIL \
+            --include-package=pdfplumber \
+            --include-package=pdfminer \
+            --include-package=docx \
+            --include-package=pandas \
+            --include-package=apscheduler \
+            --include-package=reportlab \
+            --include-package=slowapi \
+            --include-package=multipart \
+            --include-package=aiosqlite \
+            --include-module=uvloop \
+            --include-module=httptools \
+            --nofollow-import-to=tkinter \
+            --nofollow-import-to=matplotlib \
+            --nofollow-import-to=scipy \
+            --nofollow-import-to=IPython \
+            --nofollow-import-to=notebook \
+            --nofollow-import-to=pytest \
+            --nofollow-import-to=setuptools \
+            --nofollow-import-to=pip \
+            --nofollow-import-to=pandas.tests \
+            --nofollow-import-to=aiosqlite.tests \
+            --nofollow-import-to=sqlalchemy.testing \
+            --nofollow-import-to=PIL.tests \
+            --nofollow-import-to=openpyxl.tests \
+            --nofollow-import-to=unittest \
+            --nofollow-import-to=test \
+            --nofollow-import-to=distutils \
+            --include-package-data=reportlab \
+            --include-package-data=pdfminer \
+            --include-package-data=certifi \
+            --include-data-dir=web=web \
+            --include-data-dir=app/i18n/locales=app/i18n/locales \
+            --jobs=4 \
+            --assume-yes-for-downloads \
+            app_entry.py
+
+      - name: Assemble & package (Linux)
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          RELEASE_NAME="data-ops-workbench-${TAG}-linux-x64"
+          mkdir -p dist/data-ops-workbench/server
+          cp -r backend/nuitka-out/app_entry.dist dist/data-ops-workbench/server/app
+          cp start.sh dist/data-ops-workbench/start.sh
+          chmod +x dist/data-ops-workbench/start.sh
+          cp start.bat dist/data-ops-workbench/start.bat 2>/dev/null || true
+          cp README.md dist/data-ops-workbench/README.md
+          for d in data backups logs; do
+            mkdir -p dist/data-ops-workbench/$d
+            touch dist/data-ops-workbench/$d/.gitkeep
+          done
+          # Include plugin manifests
+          for manifest in backend/app/plugins/*/manifest.json; do
+            pname=$(basename $(dirname "$manifest"))
+            target="dist/data-ops-workbench/server/app/app/plugins/$pname"
+            mkdir -p "$target"
+            cp "$manifest" "$target/manifest.json"
+          done
+          cd dist
+          tar -czf "${RELEASE_NAME}.tar.gz" data-ops-workbench/
+          echo "ASSET_PATH=dist/${RELEASE_NAME}.tar.gz" >> $GITHUB_ENV
+          echo "ASSET_NAME=${RELEASE_NAME}.tar.gz" >> $GITHUB_ENV
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.ASSET_PATH }}
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          pnpm install --frozen-lockfile
+          if ($LASTEXITCODE -ne 0) { pnpm install }
+          pnpm run build
+
+      - name: Install Python deps & Nuitka
+        run: |
+          pip install --upgrade pip
+          pip install -r backend\requirements.txt
+          pip install nuitka ordered-set zstandard
+          pip install pystray Pillow
+
+      - name: Install MinGW
+        uses: egor-tensin/setup-mingw@v2
+        with:
+          platform: x64
+          version: 12.2.0
+
+      - name: Nuitka compile (Windows)
+        shell: pwsh
+        run: |
+          cd backend
+          python -m nuitka `
+            --standalone `
+            --output-dir=.\nuitka-out `
+            --output-filename=dataops-server.exe `
+            --mingw64 `
+            --python-flag=no_site `
+            --python-flag=no_warnings `
+            --follow-imports `
+            --include-package=app `
+            --include-package=app.routers `
+            --include-package=app.plugins `
+            --include-package=app.plugins.plugin_notification `
+            --include-package=app.plugins.plugin_approval `
+            --include-package=app.plugins.plugin_backup `
+            --include-package=app.plugins.plugin_report `
+            --include-package=app.plugins.plugin_scheduler `
+            --include-package=app.plugins.plugin_health_check `
+            --include-package=app.plugins.plugin_batch_ops `
+            --include-package=app.plugins.plugin_smart_import `
+            --include-package=app.plugins.plugin_ai_assistant `
+            --include-package=app.plugins.plugin_db_manager `
+            --include-package=app.plugins.plugin_data_mask `
+            --include-package=app.plugins.plugin_notify_push `
+            --include-package=app.plugins.plugin_data_trend `
+            --include-package=app.plugins.plugin_audit_export `
+            --include-package=app.plugins.plugin_data_compare `
+            --include-package=app.plugins.plugin_template_market `
+            --include-package=app.plugins.plugin_ai_predict `
+            --include-package=app.plugins.plugin_webhook `
+            --include-package=app.plugins.plugin_sql_console `
+            --include-package=app.utils `
+            --include-package=app.schemas `
+            --include-package=app.ai `
+            --include-package=app.i18n `
+            --include-package=app.scheduler `
+            --include-package=uvicorn `
+            --include-package=uvicorn.loops `
+            --include-package=uvicorn.protocols `
+            --include-package=uvicorn.lifespan `
+            --include-package=fastapi `
+            --include-package=starlette `
+            --include-package=starlette.middleware `
+            --include-package=sqlalchemy `
+            --include-package=sqlalchemy.dialects.sqlite `
+            --include-package=sqlalchemy.dialects.mysql `
+            --include-package=sqlalchemy.dialects.postgresql `
+            --include-package=pydantic `
+            --include-package=pydantic_core `
+            --include-package=annotated_types `
+            --include-package=anyio `
+            --include-package=anyio._backends `
+            --include-package=sniffio `
+            --include-package=pymysql `
+            --include-package=passlib `
+            --include-package=passlib.handlers `
+            --include-package=jose `
+            --include-package=bcrypt `
+            --include-package=cryptography `
+            --include-package=httpx `
+            --include-package=openpyxl `
+            --include-package=PIL `
+            --include-package=pdfplumber `
+            --include-package=pdfminer `
+            --include-package=docx `
+            --include-package=pandas `
+            --include-package=apscheduler `
+            --include-package=reportlab `
+            --include-package=slowapi `
+            --include-package=multipart `
+            --include-package=aiosqlite `
+            --include-module=httptools `
+            --nofollow-import-to=tkinter `
+            --nofollow-import-to=matplotlib `
+            --nofollow-import-to=scipy `
+            --nofollow-import-to=IPython `
+            --nofollow-import-to=notebook `
+            --nofollow-import-to=pytest `
+            --nofollow-import-to=setuptools `
+            --nofollow-import-to=pip `
+            --nofollow-import-to=pandas.tests `
+            --nofollow-import-to=aiosqlite.tests `
+            --nofollow-import-to=sqlalchemy.testing `
+            --nofollow-import-to=PIL.tests `
+            --nofollow-import-to=openpyxl.tests `
+            --nofollow-import-to=unittest `
+            --nofollow-import-to=test `
+            --nofollow-import-to=distutils `
+            --include-package-data=reportlab `
+            --include-package-data=pdfminer `
+            --include-package-data=certifi `
+            --include-data-dir=web=web `
+            --include-data-dir=app/i18n/locales=app/i18n/locales `
+            --jobs=4 `
+            --assume-yes-for-downloads `
+            app_entry.py
+
+      - name: Nuitka compile launcher (Windows)
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          # v3.4.2: 使用 --standalone 代替 --onefile，减少运行时依赖问题
+          python -m nuitka `
+            --standalone `
+            --output-dir=.\launcher-out `
+            --output-filename="数据运维工作台.exe" `
+            --mingw64 `
+            --windows-disable-console `
+            --windows-icon-from-ico=icon.ico `
+            --include-package=pystray `
+            --include-package=PIL `
+            --include-module=pystray._win32 `
+            --assume-yes-for-downloads `
+            launcher.py
+
+      - name: Assemble & package (Windows)
+        shell: pwsh
+        run: |
+          $TAG = "${{ github.ref_name }}"
+          $RELEASE_NAME = "data-ops-workbench-${TAG}-win-x64"
+          
+          New-Item -ItemType Directory -Force -Path dist\data-ops-workbench\server
+          Copy-Item -Recurse backend\nuitka-out\app_entry.dist dist\data-ops-workbench\server\app
+          Copy-Item start.bat dist\data-ops-workbench\start.bat -ErrorAction SilentlyContinue
+          Copy-Item start.sh dist\data-ops-workbench\start.sh -ErrorAction SilentlyContinue
+          Copy-Item README.md dist\data-ops-workbench\README.md
+          # 复制 VBS 启动器（可靠备选，不依赖编译）
+          Copy-Item "数据运维工作台.vbs" "dist\data-ops-workbench\数据运维工作台.vbs" -ErrorAction SilentlyContinue
+          # 复制图形启动器到发布包根目录（如果编译成功）
+          Copy-Item "数据运维工作台.exe" "dist\data-ops-workbench\数据运维工作台.exe" -ErrorAction SilentlyContinue
+          
+          foreach ($d in @("data","backups","logs")) {
+            New-Item -ItemType Directory -Force -Path "dist\data-ops-workbench\$d" | Out-Null
+            New-Item -ItemType File -Force -Path "dist\data-ops-workbench\$d\.gitkeep" | Out-Null
+          }
+          
+          # Copy launcher standalone build (v3.4.2: standalone 模式，复制整个目录)
+          $launcherDist = Get-ChildItem -Path "launcher-out" -Directory -Filter "*.dist" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($launcherDist) {
+            # 复制 standalone 依赖目录
+            Copy-Item -Recurse $launcherDist.FullName "dist\data-ops-workbench\launcher"
+            # 把 exe 复制到根目录方便用户双击
+            $launcherExe = Get-ChildItem -Path $launcherDist.FullName -Filter "数据运维工作台.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($launcherExe) {
+              Copy-Item $launcherExe.FullName "dist\data-ops-workbench\数据运维工作台.exe"
+            }
+          } else {
+            # fallback: 直接找 exe（兼容旧模式）
+            $launcherExe = Get-ChildItem -Path "launcher-out" -Filter "数据运维工作台.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($launcherExe) {
+              Copy-Item $launcherExe.FullName "dist\data-ops-workbench\数据运维工作台.exe"
+            }
+          }
+          
+          # Copy plugin manifests
+          Get-ChildItem backend\app\plugins\*\manifest.json -ErrorAction SilentlyContinue | ForEach-Object {
+            $pname = $_.Directory.Name
+            $target = "dist\data-ops-workbench\server\app\app\plugins\$pname"
+            New-Item -ItemType Directory -Force -Path $target | Out-Null
+            Copy-Item $_.FullName "$target\manifest.json"
+          }
+          
+          Compress-Archive -Path dist\data-ops-workbench -DestinationPath "dist\${RELEASE_NAME}.zip"
+          echo "ASSET_PATH=dist/${RELEASE_NAME}.zip" >> $env:GITHUB_ENV
+          echo "ASSET_NAME=${RELEASE_NAME}.zip" >> $env:GITHUB_ENV
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y --no-progress
+
+      - name: Build installer with Inno Setup
+        shell: pwsh
+        run: |
+          $TAG = "${{ github.ref_name }}"
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DMyAppVersion=$TAG setup.iss
+          $setupExe = Get-ChildItem -Path dist -Filter "*setup*.exe" -Recurse | Select-Object -First 1
+          echo "SETUP_EXE_PATH=$($setupExe.FullName)" >> $env:GITHUB_ENV
+          echo "SETUP_EXE_NAME=$($setupExe.Name)" >> $env:GITHUB_ENV
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ${{ env.ASSET_PATH }}
+            ${{ env.SETUP_EXE_PATH }}

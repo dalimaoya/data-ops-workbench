@@ -1,0 +1,22 @@
+/* 全局滚动条 */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* 页面淡入 */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 卡片 hover 效果 */
+.ant-card-hoverable:hover {
+  transform: translateY(-2px);
+  transition: all 0.2s ease;
+}
+
+/* 按钮 hover 微上移 */
+.ant-btn:not(.ant-btn-link):hover {
+  transform: translateY(-1px);
+  transition: transform 0.15s ease;
+}

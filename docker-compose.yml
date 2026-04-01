@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  dataops:
+    build: .
+    ports:
+      - "9590:9590"
+    volumes:
+      - ./data:/app/data
+      - ./backups:/app/backups
+    environment:
+      - PORT=9590

@@ -1,0 +1,27 @@
+{
+  "name": "plugin-notification-push",
+  "version": "5.1.0",
+  "display_name": "通知推送",
+  "display_name_en": "Notification Center",
+  "description": "统一管理企微/钉钉/邮件/自定义Webhook通知渠道，事件订阅与推送记录",
+  "author": "dalimaoya",
+  "license": "proprietary",
+  "requires_core": ">=5.0.0",
+  "dependencies": [
+    "httpx"
+  ],
+  "frontend": {
+    "menu_items": [
+      {
+        "key": "/notification-push",
+        "icon": "SendOutlined",
+        "label_key": "menu.notificationPush",
+        "roles": [
+          "admin"
+        ]
+      }
+    ]
+  },
+  "layer": "extension",
+  "category": "integration"
+}

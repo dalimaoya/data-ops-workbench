@@ -1,0 +1,28 @@
+export const themeConfig = {
+  token: {
+    colorPrimary: '#2B5AED',
+    colorSuccess: '#22C55E',
+    colorWarning: '#F59E0B',
+    colorError: '#EF4444',
+    colorInfo: '#3B82F6',
+    borderRadius: 8,
+    borderRadiusLG: 12,
+    borderRadiusSM: 6,
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', 'Microsoft YaHei', sans-serif",
+    fontSize: 14,
+    controlHeight: 40,
+    boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06)',
+    boxShadowSecondary: '0 4px 12px rgba(0,0,0,0.08)',
+    colorBgLayout: '#F5F7FA',
+    colorBgContainer: '#FFFFFF',
+    colorBorderSecondary: '#E8ECF1',
+  },
+  components: {
+    Card: { borderRadiusLG: 12, paddingLG: 20 },
+    Table: { headerBg: '#FAFBFC', headerColor: '#1E293B', rowHoverBg: '#F0F5FF', headerSortActiveBg: '#F0F2F5' },
+    Button: { borderRadius: 8, controlHeight: 40 },
+    Input: { borderRadius: 8, controlHeight: 40 },
+    Modal: { borderRadiusLG: 12 },
+    Statistic: { contentFontSize: 28 },
+  },
+};

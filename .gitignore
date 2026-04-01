@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Runtime data - 绝对不能提交
+data/
+backups/
+logs/
+temp/
+
+# Node
+node_modules/
+frontend/node_modules/
+frontend/dist/
+
+# Build artifacts
+backend/web/
+*.spec
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+*.key
+.env
+.env.*
+*.pem
+.fernet_key
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+backend/data/
+backend/dataops.db
+.env.*
+
+# GitHub workflows - now tracked for CI/CD
+release/
+backend/nuitka-out/
